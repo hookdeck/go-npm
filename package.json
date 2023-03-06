@@ -1,6 +1,6 @@
 {
-  "name": "go-npm",
-  "version": "0.1.8",
+  "name": "go-npm-next",
+  "version": "1.0.0",
   "description": "Distribute and install Go binaries via NPM",
   "main": "./src/index.js",
   "bin": {
@@ -12,7 +12,6 @@
     "prepublish": "npm run build",
     "postinstall": "npm run build"
   },
-  "author": "Sanath Kumar Ramesh <dayanandasaraswati@gmail.com>",
   "license": "Apache-2.0",
   "dependencies": {
     "mkdirp": "^0.5.1",
@@ -21,9 +20,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/sanathkr/go-npm.git"
+    "url": "https://github.com/hookdeck/go-npm.git"
   },
-  "homepage": "https://github.com/sanathkr/go-npm",
+  "homepage": "https://github.com/hookdeck/go-npm",
   "devDependencies": {
     "esbuild": "^0.17.11"
   }
