@@ -15,7 +15,7 @@ const ARCH_MAPPING = {
   ia32: "386",
   x64: "amd64",
   arm: "arm",
-  amd64: "amd64",
+  arm64: "arm64",
 };
 
 // Mapping between Node's `process.platform` to Golang's
