@@ -2,7 +2,8 @@
 
 "use strict";
 
-const path = require("path"),
+const request = require("request"),
+  path = require("path"),
   tar = require("tar"),
   zlib = require("zlib"),
   mkdirp = require("mkdirp"),
@@ -179,19 +180,19 @@ function install(callback) {
   );
 
   console.log("Downloading from URL: " + opts.url);
-  //   let req = request({ uri: opts.url });
-  //   req.on(
-  //     "error",
-  //     callback.bind(null, "Error downloading from URL: " + opts.url)
-  //   );
-  //   req.on("response", function (res) {
-  //     if (res.statusCode !== 200)
-  //       return callback(
-  //         "Error downloading binary. HTTP Status Code: " + res.statusCode
-  //       );
+  let req = request({ uri: opts.url });
+  req.on(
+    "error",
+    callback.bind(null, "Error downloading from URL: " + opts.url)
+  );
+  req.on("response", function (res) {
+    if (res.statusCode !== 200)
+      return callback(
+        "Error downloading binary. HTTP Status Code: " + res.statusCode
+      );
 
-  //     req.pipe(ungz).pipe(untar);
-  //   });
+    req.pipe(ungz).pipe(untar);
+  });
 }
 
 function uninstall(callback) {

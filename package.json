@@ -2,13 +2,15 @@
   "name": "go-npm",
   "version": "0.1.8",
   "description": "Distribute and install Go binaries via NPM",
-  "main": "index.js",
+  "main": "./src/index.js",
   "bin": {
     "go-npm": "./bin/index.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prepublish": "./node_modules/.bin/esbuild src/index.js --bundle --outdir=bin --target=es2015 --platform=node"
+    "build": "./node_modules/.bin/esbuild src/index.js --bundle --outdir=bin --target=es2015 --platform=node",
+    "prepublish": "npm run build",
+    "postinstall": "npm run build"
   },
   "author": "Sanath Kumar Ramesh <dayanandasaraswati@gmail.com>",
   "license": "Apache-2.0",
