@@ -52,18 +52,15 @@ This will install go-npm under to your package.json file. It will also create a 
 
 `$ rm -r node_modules`
 
-**Add postinstall and preuninstall scripts**
+**Add preinstall script**
 Here is the magic: You ask to run `go-npm install` after it completes installing your package. This will pull down binaries from Github or Amazon S3 and install in NPM's `bin` directory. Binaries under bin directory are immediately available for use in your Terminal.
 
 Edit `package.json` file and add the following:
 ```
 {
-    "postinstall": "go-npm install",
-    "preuninstall": "go-npm uninstall",
+    "preinstall": "go-npm install"
 }
 ```
-
-`go-npm uninstall` simply deletes the binary from `bin` directory before NPM uninstalls your package.
 
 **Configure your binary path**
 
@@ -74,6 +71,7 @@ You need to tell `go-npm` where to download the binaries from, and where to inst
       "name": "command-name",
       "path": "./bin",
       "url": "https://github.com/user/my-go-package/releases/download/v{{version}}/myGoPackage_{{version}}_{{platform}}_{{arch}}.tar.gz"
+}
 ```
 
 * *name*: Name of the command users will use to run your binary. 
