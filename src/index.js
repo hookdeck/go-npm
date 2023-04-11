@@ -5,10 +5,8 @@
 const request = require("request"),
   path = require("path"),
   tar = require("tar"),
-  zlib = require("zlib"),
   mkdirp = require("mkdirp"),
-  fs = require("fs"),
-  exec = require("child_process").exec;
+  fs = require("fs");
 
 // Mapping from Node's `process.arch` to Golang's `$GOARCH`
 const ARCH_MAPPING = {
@@ -26,47 +24,13 @@ const PLATFORM_MAPPING = {
   freebsd: "freebsd",
 };
 
-function getInstallationPath(callback) {
-  // `npm bin` will output the path where binary files should be installed
-  exec("npm bin", function (err, stdout, stderr) {
-    let dir = null;
-    if (err || stderr || !stdout || stdout.length === 0) {
-      // We couldn't infer path from `npm bin`. Let's try to get it from
-      // Environment variables set by NPM when it runs.
-      // npm_config_prefix points to NPM's installation directory where `bin` folder is available
-      // Ex: /Users/foo/.nvm/versions/node/v4.3.0
-      let env = process.env;
-      if (env && env.npm_config_prefix) {
-        dir = path.join(env.npm_config_prefix, "bin");
-      }
-    } else {
-      dir = stdout.trim();
-    }
-
-    mkdirp.sync(dir);
-
-    callback(null, dir);
-  });
-}
-
-function verifyAndPlaceBinary(binName, binPath, callback) {
+function verifyBinary(binName, binPath, callback) {
   if (!fs.existsSync(path.join(binPath, binName)))
     return callback(
       `Downloaded binary does not contain the binary specified in configuration - ${binName}`
     );
 
-  getInstallationPath(function (err, installationPath) {
-    if (err)
-      return callback("Error getting binary installation path from `npm bin`");
-
-    // Move the binary file
-    fs.renameSync(
-      path.join(binPath, binName),
-      path.join(installationPath, binName)
-    );
-
-    callback(null);
-  });
+  callback(null);
 }
 
 function validateConfiguration(packageJson) {
@@ -155,7 +119,7 @@ function parsePackageJson() {
 /**
  * Reads the configuration from application's package.json,
  * validates properties, downloads the binary, untars, and stores at
- * ./bin in the package's root. NPM already has support to install binary files
+ * goBinary.path in the package's root. NPM already has support to install binary files
  * specific locations when invoked with "npm install -g"
  *
  *  See: https://docs.npmjs.com/files/package.json#bin
@@ -166,17 +130,15 @@ function install(callback) {
   if (!opts) return callback(INVALID_INPUT);
 
   mkdirp.sync(opts.binPath);
-  let ungz = zlib.createGunzip();
-  let untar = tar.Extract({ path: opts.binPath });
+  let untar = tar.extract({ cwd: opts.binPath }, [opts.binName]);
 
-  ungz.on("error", callback);
   untar.on("error", callback);
 
   // First we will Un-GZip, then we will untar. So once untar is completed,
   // binary is downloaded into `binPath`. Verify the binary and call it good
   untar.on(
     "end",
-    verifyAndPlaceBinary.bind(null, opts.binName, opts.binPath, callback)
+    verifyBinary.bind(null, opts.binName, opts.binPath, callback)
   );
 
   console.log("Downloading from URL: " + opts.url);
@@ -191,29 +153,13 @@ function install(callback) {
         "Error downloading binary. HTTP Status Code: " + res.statusCode
       );
 
-    req.pipe(ungz).pipe(untar);
-  });
-}
-
-function uninstall(callback) {
-  let opts = parsePackageJson();
-  getInstallationPath(function (err, installationPath) {
-    if (err) callback("Error finding binary installation directory");
-
-    try {
-      fs.unlinkSync(path.join(installationPath, opts.binName));
-    } catch (ex) {
-      // Ignore errors when deleting the file.
-    }
-
-    return callback(null);
+    req.pipe(untar);
   });
 }
 
 // Parse command line arguments and call the right method
 let actions = {
   install: install,
-  uninstall: uninstall,
 };
 
 let argv = process.argv;
@@ -221,7 +167,7 @@ if (argv && argv.length > 2) {
   let cmd = process.argv[2];
   if (!actions[cmd]) {
     console.log(
-      "Invalid command to go-npm. `install` and `uninstall` are the only supported commands"
+      "Invalid command to go-npm. `install` is the only supported command"
     );
     process.exit(1);
   }

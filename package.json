@@ -1,33 +1,23 @@
 {
   "name": "go-npm-next",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Distribute and install Go binaries via NPM",
   "main": "./src/index.js",
   "bin": {
-    "go-npm": "./bin/index.js"
+    "go-npm": "./src/index.js"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "./node_modules/.bin/esbuild src/index.js --bundle --outdir=bin --platform=node",
-    "prepublish": "npm run build"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "mkdirp": "^0.5.1",
-    "request": "^2.81.0",
-    "tar": "^2.2.1"
-  },
-  "goBinary": {
-    "name": "hookdeck",
-    "path": "./bin",
-    "url": "https://github.com/hookdeck/hookdeck-cli/releases/download/v{{version}}/hookdeck_{{version}}_{{platform}}_{{arch}}.tar.gz"
+    "mkdirp": "^2.1.6",
+    "request": "^2.88.2",
+    "tar": "^6.1.13"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/hookdeck/go-npm.git"
   },
-  "homepage": "https://github.com/hookdeck/go-npm",
-  "devDependencies": {
-    "esbuild": "^0.17.11"
-  }
+  "homepage": "https://github.com/hookdeck/go-npm"
 }
