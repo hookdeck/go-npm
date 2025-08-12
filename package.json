@@ -2,18 +2,31 @@
   "name": "go-npm-next",
   "version": "1.1.0",
   "description": "Distribute and install Go binaries via NPM",
-  "main": "./src/index.js",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "bin": {
-    "go-npm": "./src/index.js"
+    "go-npm": "./dist/index.js"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build",
+    "test": "jest"
   },
   "license": "Apache-2.0",
   "dependencies": {
     "mkdirp": "^3.0.1",
     "node-fetch": "^2.7.0",
     "tar": "^6.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.0",
+    "@types/node-fetch": "^2.6.11",
+    "@types/tar": "^6.1.11",
+    "@types/jest": "^29.5.12",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
+    "typescript": "^5.3.3"
   },
   "repository": {
     "type": "git",

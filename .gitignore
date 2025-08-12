@@ -1,3 +1,7 @@
-.idea
-node_modules
-bin
+node_modules/
+dist/
+coverage/
+*.log
+.DS_Store
+.nyc_output
+tests/test-*

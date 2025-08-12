@@ -1,20 +1,14 @@
 ## Go NPM
-### Distribute cross-platform Go binaries via NPM
 
-**🚀 Modernized version with enhanced reliability, security, and npm v9+ compatibility**
+Distribute cross-platform Go binaries via NPM.
+
+**🚀 Modernized version with TypeScript, comprehensive testing, and enhanced reliability**
 
 Applications written in Golang are portable - you can easily cross-compile binaries that work on Windows, Mac, and Linux. But how do you distribute the binaries to customers? When you publish new releases, how do they update the binary? 
 
 **Use NPM to distribute cross-platform Go binaries**
 
-## Recent Improvements (v1.1.0)
-
-- ✅ **Modern dependencies**: Replaced deprecated `request` with `node-fetch`
-- ✅ **npm v9+ compatibility**: Dynamic detection and fallback for binary path resolution
-- ✅ **Enhanced error messages**: Detailed, actionable error reporting
-- ✅ **Better validation**: Comprehensive package.json validation with helpful guidance
-- ✅ **Security updates**: Latest dependency versions with security patches
-- ✅ **Improved reliability**: Better cross-platform support and error handling
+> **Note:** This is `go-npm-next`, a modernized and enhanced version of the original `go-npm` package. See [Credits](#credits) for information about other versions.
 
 ## Kidding me! Why NPM?
 * **Cross-platform**: NPM is the only popular package manager that works cross-platform. 
@@ -42,10 +36,10 @@ builds:
       - amd64
 ```
 
-`go-npm` will pull the appropriate binary for the platform & architecture where the package is being installed.
+`go-npm-next` will pull the appropriate binary for the platform & architecture where the package is being installed.
 
 ### 2. Create a package.json file for your NPM app
-To publish to NPM, you need to create a `package.json` file. You give your application a name, link to Readme, Github repository etc, and more importantly add `go-npm` as a dependency. You can create this file in an empty directory in your project or in a separate Git repository altogether. It is your choice.
+To publish to NPM, you need to create a `package.json` file. You give your application a name, link to Readme, Github repository etc, and more importantly add `go-npm-next` as a dependency. You can create this file in an empty directory in your project or in a separate Git repository altogether. It is your choice.
 
 **Create package.json**
 
@@ -53,23 +47,25 @@ To publish to NPM, you need to create a `package.json` file. You give your appli
 
 Answer the questions to create an initial package.json file
 
-**Add go-npm dependency**
+**Add go-npm-next dependency**
 
 From the directory containing package.json file, do
 
-`$ npm install go-npm --save`
+`$ npm install go-npm-next --save`
 
-This will install go-npm under to your package.json file. It will also create a `node_modules` directory where the `go-npm` package is downloaded. You don't need this directory since you are only going to publish the module and not consume it yourself. Let's go ahead and delete it.
+This will install go-npm-next under to your package.json file. It will also create a `node_modules` directory where the `go-npm-next` package is downloaded. You don't need this directory since you are only going to publish the module and not consume it yourself. Let's go ahead and delete it.
 
 `$ rm -r node_modules`
 
-**Add preinstall script**
+**Add postinstall script**
 Here is the magic: You ask to run `go-npm install` after it completes installing your package. This will pull down binaries from Github or Amazon S3 and install in NPM's `bin` directory. Binaries under bin directory are immediately available for use in your Terminal.
 
 Edit `package.json` file and add the following:
 ```
 {
-    "preinstall": "go-npm install"
+    "scripts": {
+        "postinstall": "go-npm install"
+    }
 }
 ```
 
@@ -146,6 +142,63 @@ If you encounter issues not covered above:
 2. Verify your binary archives are properly structured
 3. Test your URL template manually by substituting the placeholders
 
+## Development
+
+### Building
+```bash
+npm run build        # Compile TypeScript to JavaScript
+npm run dev          # Watch mode for development
+```
+
+### Testing
+```bash
+npm test            # Run all tests
+npm test -- --watch # Run tests in watch mode
+npm test -- --coverage # Generate coverage report
+```
+
+### TypeScript Support
+
+This package is written in TypeScript and provides type definitions. You can import types for better development experience:
+
+```typescript
+import { PackageConfig, GoBinaryConfig, ParsedOptions } from 'go-npm-next';
+
+const config: PackageConfig = {
+  version: "1.0.0",
+  goBinary: {
+    name: "my-binary",
+    path: "./bin",
+    url: "https://github.com/user/repo/releases/download/v{{version}}/binary_{{platform}}_{{arch}}.tar.gz"
+  }
+};
+```
+
+## Changelog
+
+### v1.2.0 (Latest)
+- ✅ **TypeScript**: Full TypeScript rewrite with type safety and better developer experience
+- ✅ **Comprehensive Testing**: Unit and integration tests with Jest for reliability
+- ✅ **Modern dependencies**: Replaced deprecated `request` with `node-fetch`
+- ✅ **npm v9+ compatibility**: Dynamic detection and fallback for binary path resolution
+- ✅ **Enhanced error messages**: Detailed, actionable error reporting
+- ✅ **Better validation**: Comprehensive package.json validation with helpful guidance
+- ✅ **Security updates**: Latest dependency versions with security patches
+- ✅ **Improved reliability**: Better cross-platform support and error handling
+
+## Credits
+
+This package builds upon the excellent work of previous versions:
+
+- **Original `go-npm`** by [Sanath Kumar Ramesh](http://twitter.com/sanathkr_) - The foundational concept and implementation
+- **Community contributions** - Various improvements and bug fixes over the years
+- **`go-npm-next`** (this version) - Modernized by Hookdeck with TypeScript, comprehensive testing, and enhanced reliability
+
+### Related Packages
+- [`go-npm`](https://www.npmjs.com/package/go-npm) - Original implementation
+- [`node-go-require`](https://www.npmjs.com/package/node-go-require) - Alternative approach for Go/Node.js integration
+- [`pkg-fetch`](https://www.npmjs.com/package/pkg-fetch) - Similar concept for Node.js binaries
+
 ---
 
-With ❤️ to the community by [Sanath Kumar Ramesh](http://twitter.com/sanathkr_)
+With ❤️ to the community by [Sanath Kumar Ramesh](http://twitter.com/sanathkr_) and the Hookdeck team
