@@ -148,14 +148,33 @@ If you encounter issues not covered above:
 ```bash
 npm run build        # Compile TypeScript to JavaScript
 npm run dev          # Watch mode for development
+npm run clean        # Clean dist and coverage directories
+npm run lint         # Type check without emitting files
 ```
 
 ### Testing
 ```bash
 npm test            # Run all tests
-npm test -- --watch # Run tests in watch mode
-npm test -- --coverage # Generate coverage report
+npm run test:watch  # Run tests in watch mode
+npm run test:coverage # Generate coverage report
 ```
+
+### Publishing
+```bash
+npm run publish:check    # Full pre-publish validation (build + test + dry-run)
+npm run publish:dry      # Dry run publish to see what would be published
+npm run version:patch    # Bump patch version (1.2.0 → 1.2.1)
+npm run version:minor    # Bump minor version (1.2.0 → 1.3.0)  
+npm run version:major    # Bump major version (1.2.0 → 2.0.0)
+npm run release:patch    # Complete patch release (check + version + publish)
+npm run release:minor    # Complete minor release (check + version + publish)
+npm run release:major    # Complete major release (check + version + publish)
+```
+
+**Recommended workflow for releases:**
+1. Make your changes and test locally
+2. Run `npm run publish:check` to validate everything is ready
+3. Run `npm run release:patch` (or minor/major) for automated release
 
 ### TypeScript Support
 

@@ -10,8 +10,20 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "prepublishOnly": "npm run build",
-    "test": "jest"
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "tsc --noEmit",
+    "clean": "rm -rf dist coverage",
+    "prepublishOnly": "npm run clean && npm run build && npm run test",
+    "version:patch": "npm version patch",
+    "version:minor": "npm version minor", 
+    "version:major": "npm version major",
+    "publish:dry": "npm publish --dry-run",
+    "publish:check": "npm run build && npm run test && npm run publish:dry",
+    "release:patch": "npm run publish:check && npm run version:patch && npm publish",
+    "release:minor": "npm run publish:check && npm run version:minor && npm publish",
+    "release:major": "npm run publish:check && npm run version:major && npm publish"
   },
   "license": "Apache-2.0",
   "dependencies": {
@@ -32,5 +44,23 @@
     "type": "git",
     "url": "https://github.com/hookdeck/go-npm.git"
   },
-  "homepage": "https://github.com/hookdeck/go-npm"
+  "homepage": "https://github.com/hookdeck/go-npm",
+  "bugs": {
+    "url": "https://github.com/hookdeck/go-npm/issues"
+  },
+  "keywords": [
+    "golang",
+    "go",
+    "binary",
+    "npm",
+    "cross-platform",
+    "distribution",
+    "cli",
+    "typescript"
+  ],
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ]
 }
