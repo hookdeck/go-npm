@@ -1,9 +1,20 @@
 ## Go NPM
 ### Distribute cross-platform Go binaries via NPM
 
+**🚀 Modernized version with enhanced reliability, security, and npm v9+ compatibility**
+
 Applications written in Golang are portable - you can easily cross-compile binaries that work on Windows, Mac, and Linux. But how do you distribute the binaries to customers? When you publish new releases, how do they update the binary? 
 
 **Use NPM to distribute cross-platform Go binaries**
+
+## Recent Improvements (v1.1.0)
+
+- ✅ **Modern dependencies**: Replaced deprecated `request` with `node-fetch`
+- ✅ **npm v9+ compatibility**: Dynamic detection and fallback for binary path resolution
+- ✅ **Enhanced error messages**: Detailed, actionable error reporting
+- ✅ **Better validation**: Comprehensive package.json validation with helpful guidance
+- ✅ **Security updates**: Latest dependency versions with security patches
+- ✅ **Improved reliability**: Better cross-platform support and error handling
 
 ## Kidding me! Why NPM?
 * **Cross-platform**: NPM is the only popular package manager that works cross-platform. 
@@ -101,6 +112,39 @@ To Update:
 
 `npm update -g your-app-name`
 
+## Troubleshooting
+
+### Common Issues and Solutions
+
+**Installation fails with "HTTP 404" error:**
+- Verify the URL template in your `goBinary.url` is correct
+- Check that the release exists on your hosting platform (GitHub Releases, S3, etc.)
+- Ensure platform/architecture placeholders match your binary naming convention
+
+**"Architecture not supported" error:**
+- Supported architectures: `ia32`, `x64`, `arm`, `arm64`
+- Supported platforms: `darwin`, `linux`, `win32`, `freebsd`
+- Make sure your Go build process creates binaries for the target platform/arch
+
+**npm v9+ compatibility issues:**
+- The package automatically detects your npm version and uses the appropriate method
+- If you encounter issues, try updating to the latest npm version: `npm install -g npm@latest`
+
+**Permission errors during installation:**
+- On Unix systems, you may need to run with `sudo` for global installations
+- Consider using a Node version manager like `nvm` to avoid permission issues
+
+**Binary not found after installation:**
+- Verify your `goBinary.url` template includes the correct binary name
+- Check that the archive structure matches your extraction expectations
+- Ensure the binary has executable permissions
+
+### Getting Help
+
+If you encounter issues not covered above:
+1. Check that your `package.json` follows the configuration format shown in this README
+2. Verify your binary archives are properly structured
+3. Test your URL template manually by substituting the placeholders
 
 ---
 

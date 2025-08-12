@@ -2,11 +2,43 @@
 
 "use strict";
 
-const request = require("request"),
+const fetch = require("node-fetch"),
   path = require("path"),
   tar = require("tar"),
-  mkdirp = require("mkdirp"),
-  fs = require("fs");
+  { mkdirp } = require("mkdirp"),
+  fs = require("fs"),
+  { exec } = require("child_process"),
+  { promisify } = require("util");
+
+const execAsync = promisify(exec);
+
+// Get npm version for compatibility checking
+async function getNpmVersion() {
+  try {
+    const { stdout } = await execAsync("npm --version");
+    return parseInt(stdout.trim().split(".")[0], 10);
+  } catch (error) {
+    console.warn("Warning: Could not determine npm version, using fallback method");
+    return 6; // Default to older npm behavior
+  }
+}
+
+// Get npm global bin path with version compatibility
+async function getNpmBinPath() {
+  const npmVersion = await getNpmVersion();
+  
+  try {
+    if (npmVersion >= 9) {
+      const { stdout } = await execAsync("npm prefix -g");
+      return path.join(stdout.trim(), "bin");
+    } else {
+      const { stdout } = await execAsync("npm bin -g");
+      return stdout.trim();
+    }
+  } catch (error) {
+    throw new Error(`Failed to determine npm global bin path: ${error.message}`);
+  }
+}
 
 // Mapping from Node's `process.arch` to Golang's `$GOARCH`
 const ARCH_MAPPING = {
@@ -25,51 +57,60 @@ const PLATFORM_MAPPING = {
 };
 
 function verifyBinary(binName, binPath, callback) {
-  if (!fs.existsSync(path.join(binPath, binName)))
+  const binaryPath = path.join(binPath, binName);
+  if (!fs.existsSync(binaryPath)) {
     return callback(
-      `Downloaded binary does not contain the binary specified in configuration - ${binName}`
+      `Downloaded binary does not contain the expected binary '${binName}' at path '${binaryPath}'. ` +
+      `Please verify the package configuration and URL template.`
     );
+  }
 
   callback(null);
 }
 
 function validateConfiguration(packageJson) {
   if (!packageJson.version) {
-    return "'version' property must be specified";
+    return "Missing required 'version' property in package.json";
   }
 
   if (!packageJson.goBinary || typeof packageJson.goBinary !== "object") {
-    return "'goBinary' property must be defined and be an object";
+    return "Missing or invalid 'goBinary' property in package.json. It must be an object containing 'name', 'path', and 'url' properties.";
   }
 
   if (!packageJson.goBinary.name) {
-    return "'name' property is necessary";
+    return "Missing required 'goBinary.name' property. This should be the name of the binary executable.";
   }
 
   if (!packageJson.goBinary.path) {
-    return "'path' property is necessary";
+    return "Missing required 'goBinary.path' property. This should be the local path where the binary will be extracted.";
   }
 
   if (!packageJson.goBinary.url) {
-    return "'url' property is required";
+    return "Missing required 'goBinary.url' property. This should be the URL template for downloading the binary archive.";
   }
 
-  // if (!packageJson.bin || typeof(packageJson.bin) !== "object") {
-  //     return "'bin' property of package.json must be defined and be an object";
-  // }
+  // Validate URL template has required placeholders
+  const url = packageJson.goBinary.url;
+  if (!url.includes("{{platform}}") || !url.includes("{{arch}}")) {
+    return "The 'goBinary.url' should contain {{platform}} and {{arch}} placeholders for cross-platform compatibility.";
+  }
+
+  return null; // No validation errors
 }
 
 function parsePackageJson() {
   if (!(process.arch in ARCH_MAPPING)) {
     console.error(
-      "Installation is not supported for this architecture: " + process.arch
+      `Installation is not supported for architecture: ${process.arch}. ` +
+      `Supported architectures are: ${Object.keys(ARCH_MAPPING).join(", ")}`
     );
     return;
   }
 
   if (!(process.platform in PLATFORM_MAPPING)) {
     console.error(
-      "Installation is not supported for this platform: " + process.platform
+      `Installation is not supported for platform: ${process.platform}. ` +
+      `Supported platforms are: ${Object.keys(PLATFORM_MAPPING).join(", ")}`
     );
     return;
   }
@@ -77,16 +118,23 @@ function parsePackageJson() {
   const packageJsonPath = path.join(".", "package.json");
   if (!fs.existsSync(packageJsonPath)) {
     console.error(
-      "Unable to find package.json. " +
-        "Please run this script at root of the package you want to be installed"
+      `Unable to find package.json at ${packageJsonPath}. ` +
+      `Please run this script from the root directory of your package.`
     );
     return;
   }
 
-  let packageJson = JSON.parse(fs.readFileSync(packageJsonPath));
+  let packageJson;
+  try {
+    packageJson = JSON.parse(fs.readFileSync(packageJsonPath));
+  } catch (error) {
+    console.error(`Failed to parse package.json: ${error.message}`);
+    return;
+  }
+
   let error = validateConfiguration(packageJson);
-  if (error && error.length > 0) {
-    console.error("Invalid package.json: " + error);
+  if (error) {
+    console.error(`Invalid package.json configuration: ${error}`);
     return;
   }
 
@@ -125,36 +173,48 @@ function parsePackageJson() {
  *  See: https://docs.npmjs.com/files/package.json#bin
  */
 const INVALID_INPUT = "Invalid inputs";
-function install(callback) {
-  let opts = parsePackageJson();
-  if (!opts) return callback(INVALID_INPUT);
+async function install(callback) {
+  try {
+    let opts = parsePackageJson();
+    if (!opts) return callback(INVALID_INPUT);
 
-  mkdirp.sync(opts.binPath);
-  let untar = tar.extract({ cwd: opts.binPath }, [opts.binName]);
+    // Create directory structure
+    await mkdirp(opts.binPath);
+    
+    console.log(`Downloading binary for ${PLATFORM_MAPPING[process.platform]}/${ARCH_MAPPING[process.arch]} from: ${opts.url}`);
+    
+    // Download with node-fetch
+    const response = await fetch(opts.url);
+    
+    if (!response.ok) {
+      const errorMsg = `Failed to download binary from ${opts.url}. ` +
+        `HTTP ${response.status}: ${response.statusText}. ` +
+        `Please verify the URL is correct and the release exists.`;
+      return callback(errorMsg);
+    }
 
-  untar.on("error", callback);
+    // Extract the archive
+    const extractOptions = { 
+      cwd: opts.binPath,
+      filter: (path) => path.endsWith(opts.binName) || path === opts.binName
+    };
+    
+    const extractor = tar.extract(extractOptions);
+    
+    extractor.on("error", (error) => {
+      callback(`Failed to extract archive: ${error.message}`);
+    });
 
-  // First we will Un-GZip, then we will untar. So once untar is completed,
-  // binary is downloaded into `binPath`. Verify the binary and call it good
-  untar.on(
-    "end",
-    verifyBinary.bind(null, opts.binName, opts.binPath, callback)
-  );
+    extractor.on("end", () => {
+      verifyBinary(opts.binName, opts.binPath, callback);
+    });
 
-  console.log("Downloading from URL: " + opts.url);
-  let req = request({ uri: opts.url });
-  req.on(
-    "error",
-    callback.bind(null, "Error downloading from URL: " + opts.url)
-  );
-  req.on("response", function (res) {
-    if (res.statusCode !== 200)
-      return callback(
-        "Error downloading binary. HTTP Status Code: " + res.statusCode
-      );
-
-    req.pipe(untar);
-  });
+    // Pipe the response stream to the extractor
+    response.body.pipe(extractor);
+    
+  } catch (error) {
+    callback(`Installation failed: ${error.message}`);
+  }
 }
 
 // Parse command line arguments and call the right method
@@ -172,12 +232,25 @@ if (argv && argv.length > 2) {
     process.exit(1);
   }
 
-  actions[cmd](function (err) {
-    if (err) {
-      console.error(err);
-      process.exit(1);
-    } else {
-      process.exit(0);
-    }
-  });
+  // Handle async install function
+  if (cmd === "install") {
+    install(function (err) {
+      if (err) {
+        console.error(err);
+        process.exit(1);
+      } else {
+        console.log("Binary installation completed successfully!");
+        process.exit(0);
+      }
+    });
+  } else {
+    actions[cmd](function (err) {
+      if (err) {
+        console.error(err);
+        process.exit(1);
+      } else {
+        process.exit(0);
+      }
+    });
+  }
 }
