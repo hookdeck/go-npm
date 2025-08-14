@@ -1,23 +1,66 @@
 {
   "name": "go-npm-next",
-  "version": "1.0.6",
+  "version": "1.1.0",
   "description": "Distribute and install Go binaries via NPM",
-  "main": "./src/index.js",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "bin": {
-    "go-npm": "./src/index.js"
+    "go-npm": "./dist/index.js"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "tsc --noEmit",
+    "clean": "rm -rf dist coverage",
+    "prepublishOnly": "npm run clean && npm run build && npm run test",
+    "version:patch": "npm version patch",
+    "version:minor": "npm version minor", 
+    "version:major": "npm version major",
+    "publish:dry": "npm publish --dry-run",
+    "publish:check": "npm run build && npm run test && npm run publish:dry",
+    "release:patch": "npm run publish:check && npm run version:patch && npm publish",
+    "release:minor": "npm run publish:check && npm run version:minor && npm publish",
+    "release:major": "npm run publish:check && npm run version:major && npm publish"
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "mkdirp": "^2.1.6",
-    "request": "^2.88.2",
-    "tar": "^6.1.13"
+    "mkdirp": "^3.0.1",
+    "node-fetch": "^2.7.0",
+    "tar": "^6.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.0",
+    "@types/node-fetch": "^2.6.11",
+    "@types/tar": "^6.1.11",
+    "@types/jest": "^29.5.12",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
+    "typescript": "^5.3.3"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/hookdeck/go-npm.git"
   },
-  "homepage": "https://github.com/hookdeck/go-npm"
+  "homepage": "https://github.com/hookdeck/go-npm",
+  "bugs": {
+    "url": "https://github.com/hookdeck/go-npm/issues"
+  },
+  "keywords": [
+    "golang",
+    "go",
+    "binary",
+    "npm",
+    "cross-platform",
+    "distribution",
+    "cli",
+    "typescript"
+  ],
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ]
 }
